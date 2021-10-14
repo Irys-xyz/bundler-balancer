@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
         let client = awc::Client::new();
 
         App::new()
-            .app_data(client)
+            .app_data(client.clone())
             .app_data(bundlers.clone())
             .service(
                 web::scope("")

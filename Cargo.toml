@@ -7,7 +7,10 @@ edition = "2018"
 
 [dependencies]
 actix-web = "4.0.0-beta.9"
+awc = "2.0.3"
 dotenv = "0.15.0"
+log = "0.4.14"
+pretty_env_logger = "0.4.0"
 psutil = "3.2.1"
 serde = "1.0.130"
 serde_derive = "1.0.130"

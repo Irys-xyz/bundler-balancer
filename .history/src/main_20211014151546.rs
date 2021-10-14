@@ -31,12 +31,11 @@ async fn main() -> std::io::Result<()> {
         .map(|host| format!("http://{}", host))
         .collect::<Vec<_>>();
 
+    let client = awc::Client::new();
 
     HttpServer::new(move || {
-        let client = awc::Client::new();
-
         App::new()
-            .app_data(client)
+            .app_data(client.clo)
             .app_data(bundlers.clone())
             .service(
                 web::scope("")

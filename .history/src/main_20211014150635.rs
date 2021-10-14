@@ -7,8 +7,6 @@ use actix_web::{App, HttpServer, web};
 use routes::index::index;
 use sqlx::postgres::PgPoolOptions;
 
-use crate::routes::get_tx_data::get_tx_data;
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
@@ -31,17 +29,13 @@ async fn main() -> std::io::Result<()> {
         .map(|host| format!("http://{}", host))
         .collect::<Vec<_>>();
 
-
     HttpServer::new(move || {
-        let client = awc::Client::new();
-
         App::new()
-            .app_data(client)
             .app_data(bundlers.clone())
             .service(
                 web::scope("")
                 .route("/", web::get().to(index))
-                .route("/{tx_id}", web::get().to(get_tx_data))
+                .route("/{tx_id}", web::get().to(index))
                 .route("/tx", web::post().to(index))
             )
     })
