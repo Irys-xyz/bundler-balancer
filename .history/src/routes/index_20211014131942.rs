@@ -1,1 +1,0 @@
-pub async function index()
