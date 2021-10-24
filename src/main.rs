@@ -51,7 +51,7 @@ async fn main() -> std::io::Result<()> {
                 .route("/tx", web::post().to(post_tx))
             )
     })
-    .bind(format!("0.0.0.0:{}", std::env::var("PORT").unwrap()))?
+    .bind(format!("127.0.0.1:{}", std::env::var("PORT").unwrap()))?
     .run()
     .await
 }
