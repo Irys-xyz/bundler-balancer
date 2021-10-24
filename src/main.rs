@@ -16,7 +16,7 @@ async fn main() -> std::io::Result<()> {
     pretty_env_logger::init();
 
 
-    let database_url = std::env::var("DATABASE_URL").unwrap();
+    // let database_url = std::env::var("DATABASE_URL").unwrap();
 
 
     // let pool = PgPoolOptions::new()
