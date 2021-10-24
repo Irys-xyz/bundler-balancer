@@ -49,7 +49,7 @@ async fn main() -> std::io::Result<()> {
                 .route("/tx", web::post().to(post_tx))
             )
     })
-    .bind("127.0.0.1:8080")?
+    .bind(format!("127.0.0.1:{}", std::env::var("PORT").unwrap()))?
     .run()
     .await
 }
