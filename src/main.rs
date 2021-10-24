@@ -5,7 +5,7 @@ extern crate pretty_env_logger;
 
 use actix_web::{App, HttpServer, middleware::Logger, web::{self, Data}};
 use routes::index::index;
-use sqlx::postgres::PgPoolOptions;
+// use sqlx::postgres::PgPoolOptions;
 
 use crate::routes::{get_tx_data::get_tx_data, post_tx::post_tx};
 
@@ -19,13 +19,13 @@ async fn main() -> std::io::Result<()> {
     let database_url = std::env::var("DATABASE_URL").unwrap();
 
 
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(database_url.as_str())
-        .await
-        .unwrap();
+    // let pool = PgPoolOptions::new()
+    //     .max_connections(10)
+    //     .connect(database_url.as_str())
+    //     .await
+    //     .unwrap();
 
-    sqlx::migrate!().run(&pool).await.unwrap();
+    // sqlx::migrate!().run(&pool).await.unwrap();
 
     let bundlers_file = std::fs::read_to_string("bundlers.json").unwrap();
 
