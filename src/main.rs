@@ -3,7 +3,7 @@ mod routes;
 extern crate pretty_env_logger;
 #[macro_use] extern crate log;
 
-use actix_web::{App, HttpServer, middleware::Logger, web};
+use actix_web::{App, HttpServer, middleware::Logger, web::{self, Data}};
 use routes::index::index;
 use sqlx::postgres::PgPoolOptions;
 
@@ -27,8 +27,9 @@ async fn main() -> std::io::Result<()> {
 
     sqlx::migrate!().run(&pool).await.unwrap();
 
-    let bundlers_env = std::env::var("BUNDLERS").unwrap();
-    let bundlers = serde_json::from_str::<Vec<String>>(bundlers_env.as_str()).unwrap()
+    let bundlers_file = std::fs::read_to_string("bundlers.json").unwrap();
+
+    let bundlers = serde_json::from_str::<Vec<String>>(bundlers_file.as_str()).unwrap()
         .into_iter()
         .map(|host| format!("http://{}", host))
         .collect::<Vec<_>>();
@@ -39,8 +40,8 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(Logger::new("%a %r %U %Dms"))
-            .app_data(client)
-            .app_data(bundlers.clone())
+            .app_data(Data::new(client))
+            .app_data(Data::new(bundlers.clone()))
             .service(
                 web::scope("")
                 .route("/", web::get().to(index))

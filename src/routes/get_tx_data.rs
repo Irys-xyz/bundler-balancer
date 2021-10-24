@@ -19,7 +19,7 @@ pub async fn get_tx_data(
             Ok(req) => {
                 if req.status().is_success() {
                     info!("Found {} at {}", tx_id, bundler);
-                    return Ok(HttpResponse::Ok()
+                    return Ok(HttpResponse::Found()
                         .insert_header(("Location", url)).finish());
                 } else {
                     info!("Not found {} at {}", tx_id, bundler);
