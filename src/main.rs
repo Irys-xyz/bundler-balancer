@@ -45,7 +45,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("")
                 .route("/", web::get().to(index))
-                .route("/{tx_id}", web::get().to(get_tx_data))
+                .route("/tx/{tx_id}/data", web::get().to(get_tx_data))
                 .route("/tx", web::post().to(post_tx))
             )
     })
