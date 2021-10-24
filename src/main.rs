@@ -34,12 +34,13 @@ async fn main() -> std::io::Result<()> {
         .map(|host| format!("http://{}", host))
         .collect::<Vec<_>>();
 
+    info!("Starting up server...");
 
     HttpServer::new(move || {
         let client = awc::Client::new();
 
         App::new()
-            .wrap(Logger::new("%a %r %U %Dms"))
+            .wrap(Logger::new("%s %a %U %Dms"))
             .app_data(Data::new(client))
             .app_data(Data::new(bundlers.clone()))
             .service(
