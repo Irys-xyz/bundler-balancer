@@ -8,7 +8,7 @@ pub async fn get_tx_data(
 ) -> actix_web::Result<HttpResponse> {
     let (tx_id,) = path.into_inner();
     for bundler in bundlers.iter() {
-        let url = format!("{}/{}", bundler, tx_id);
+        let url = format!("{}/tx/{}/data", bundler, tx_id);
         // Create request builder, configure request and send
         let request = client
             .head(&url)
