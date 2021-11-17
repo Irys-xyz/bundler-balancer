@@ -4,6 +4,7 @@ module.exports =     // ecosystem.js
     {
       "name": "HttpServer",
       "script": "./target/release/bundler-balancer",// name of the startup file
+      "exec": "none",
       "exec_mode": "fork",  // to turn on cluster mode; defaults to 'fork' mode
       "env": {
         "PORT": "10000", // the port on which the app should listen

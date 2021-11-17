@@ -12,20 +12,9 @@ use crate::routes::{get_tx_data::get_tx_data, post_tx::post_tx};
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
-    std::env::set_var("RUST_LOG", "actix_web=info");
+    std::env::set_var("RUST_LOG", "info");
     pretty_env_logger::init();
 
-
-    // let database_url = std::env::var("DATABASE_URL").unwrap();
-
-
-    // let pool = PgPoolOptions::new()
-    //     .max_connections(10)
-    //     .connect(database_url.as_str())
-    //     .await
-    //     .unwrap();
-
-    // sqlx::migrate!().run(&pool).await.unwrap();
 
     let bundlers_file = std::fs::read_to_string("bundlers.json").unwrap();
 
@@ -36,11 +25,14 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting up server...");
 
+    let port = std::env::var("PORT").unwrap();
+    info!("Running on port {}", port);
+
     HttpServer::new(move || {
         let client = awc::Client::new();
 
         App::new()
-            .wrap(Logger::new("%s %a %U %Dms"))
+            .wrap(Logger::new("%r %s %a %Dms"))
             .app_data(Data::new(client))
             .app_data(Data::new(bundlers.clone()))
             .service(
@@ -51,7 +43,7 @@ async fn main() -> std::io::Result<()> {
                 .route("/tx", web::post().to(post_tx))
             )
     })
-    .bind(format!("127.0.0.1:{}", std::env::var("PORT").unwrap()))?
+    .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await
 }
