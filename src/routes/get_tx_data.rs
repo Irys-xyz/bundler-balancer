@@ -20,7 +20,9 @@ pub async fn get_tx_data(
                 if req.status().is_success() {
                     info!("Found {} at {}", tx_id, bundler);
                     return Ok(HttpResponse::Found()
-                        .insert_header(("Location", url)).finish());
+                        .insert_header(("Location", url))
+                        .insert_header(("Cache-Control", "max-age=86400"))
+                        .finish());
                 } else {
                     info!("Not found {} at {}", tx_id, bundler);
                     continue;
@@ -35,6 +37,6 @@ pub async fn get_tx_data(
     
 
     Ok(HttpResponse::NotFound()
-    .insert_header(("Cache-Control", "max-age=3600"))
+    .insert_header(("Cache-Control", "max-age=300"))
     .finish())
 }
