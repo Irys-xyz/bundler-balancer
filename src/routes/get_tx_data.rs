@@ -37,6 +37,5 @@ pub async fn get_tx_data(
     
 
     Ok(HttpResponse::NotFound()
-    .insert_header(("Cache-Control", "max-age=300"))
     .finish())
 }
