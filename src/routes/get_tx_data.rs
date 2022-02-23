@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, web::{Data, Path}};
+use actix_web::{HttpResponse, web::{Data, Path}, HttpMessage};
 use log::info;
 
 pub async fn get_tx_data(
@@ -19,11 +19,19 @@ pub async fn get_tx_data(
             Ok(req) => {
                 if req.status().is_success() {
                     info!("Found {} at {}", tx_id, bundler);
-                    return Ok(HttpResponse::Found()
-                        .insert_header(("Content-Length", req.headers().get("Content-Length").unwrap()))
-                        .insert_header(("Location", url))
-                        .insert_header(("Cache-Control", "max-age=86400"))
-                        .finish());
+                    debug!("Headers {:?}", req.headers());
+                    if let Some(h) = req.headers().get("Content-Length") {
+                        return Ok(HttpResponse::Found()
+                            .insert_header(("Content-Length", req.headers().get("Content-Length").unwrap()))
+                            .insert_header(("Location", url))
+                            .insert_header(("Cache-Control", "max-age=86400"))
+                            .finish());
+                    } else {
+                        return Ok(HttpResponse::Found()
+                            .insert_header(("Location", url))
+                            .insert_header(("Cache-Control", "max-age=86400"))
+                            .finish());
+                    }
                 } else {
                     info!("Not found {} at {}", tx_id, bundler);
                     continue;
