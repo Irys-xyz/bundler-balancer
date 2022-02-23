@@ -1,0 +1,6 @@
+[2022-02-23][12:04:02][bundler_balancer][INFO] Starting up server...
+[2022-02-23][12:04:02][bundler_balancer][INFO] Running on port 9000
+[2022-02-23][12:04:02][actix_server::builder][INFO] Starting 24 workers
+[2022-02-23][12:04:02][actix_server::builder][INFO] Starting "actix-web-service-127.0.0.1:9000" service on TcpListener { addr: 127.0.0.1:9000, fd: 12 }
+[2022-02-23][12:04:45][bundler_balancer::routes::get_tx_data][INFO] Found KI0lc9VoUgrlSTfg7Yag39CBdF_y7y1ff1chSStmvRo at http://node1.bundlr.network
+[2022-02-23][12:04:45][actix_web::middleware::logger][INFO] GET /tx/KI0lc9VoUgrlSTfg7Yag39CBdF_y7y1ff1chSStmvRo/data HTTP/1.1 302 127.0.0.1:52526 115.443098ms
