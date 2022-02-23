@@ -22,7 +22,7 @@ pub async fn get_tx_data(
                     debug!("Headers {:?}", req.headers());
                     if let Some(h) = req.headers().get("Content-Length") {
                         return Ok(HttpResponse::Found()
-                            .insert_header(("Content-Length", req.headers().get("Content-Length").unwrap()))
+                            .insert_header(("Content-Length", h))
                             .insert_header(("Location", url))
                             .insert_header(("Cache-Control", "max-age=86400"))
                             .finish());
