@@ -5,6 +5,7 @@ extern crate pretty_env_logger;
 
 use actix_web::{App, HttpServer, middleware::Logger, web::{self, Data}};
 use routes::index::index;
+use routes::sign_mock::sign_mock;
 // use sqlx::postgres::PgPoolOptions;
 
 use crate::routes::{get_tx_data::get_tx_data, post_tx::post_tx};
@@ -56,6 +57,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("")
                 .route("/", web::get().to(index))
+                .route("/cosigner/sign", web::get().to(sign_mock))
                 .route("/info", web::get().to(index))
                 .route("/tx/{tx_id}/data", web::get().to(get_tx_data))
                 .route("/tx/{tx_id}/data", web::head().to(get_tx_data))
