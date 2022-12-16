@@ -4,11 +4,11 @@ use log::info;
 pub async fn get_tx_data(
     bundlers: Data<Vec<String>>,
     client: Data<awc::Client>,
-    path: Path<(String,)>
+    path: Path<(String, String,)>
 ) -> actix_web::Result<HttpResponse> {
-    let (tx_id,) = path.into_inner();
+    let (tx_id, field) = path.into_inner();
     for bundler in bundlers.iter() {
-        let url = format!("{}/tx/{}/data", bundler, tx_id);
+        let url = format!("{}/tx/{}/{}", bundler, tx_id, field);
         // Create request builder, configure request and send
         let request = client
             .head(&url)
