@@ -8,7 +8,7 @@ use routes::index::index;
 use routes::sign_mock::sign_mock;
 // use sqlx::postgres::PgPoolOptions;
 
-use crate::routes::{get_tx_data::get_tx_data, post_tx::post_tx};
+use crate::routes::{get_tx_data::{get_tx_data, get_tx_meta}, post_tx::post_tx};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -61,6 +61,7 @@ async fn main() -> std::io::Result<()> {
                 .route("/info", web::get().to(index))
                 .route("/tx/{tx_id}/{field}", web::get().to(get_tx_data))
                 .route("/tx/{tx_id}/{field}", web::head().to(get_tx_data))
+                .route("/tx/{tx_id}", web::get().to(get_tx_meta))
                 .route("/tx", web::post().to(post_tx))
             )
     })
