@@ -39,7 +39,7 @@ async fn main() -> std::io::Result<()> {
 
     let bundlers = serde_json::from_str::<Vec<String>>(bundlers_file.as_str()).unwrap()
         .into_iter()
-        .map(|host| format!("http://{}", host))
+        .map(|host| format!("https://{}", host))
         .collect::<Vec<_>>();
 
     info!("Starting up server...");
