@@ -1,19 +1,19 @@
-use actix_web::{HttpResponse, web::{Data, Path}, HttpMessage};
+use actix_web::{
+    web::{Data, Path},
+    HttpMessage, HttpResponse,
+};
 use log::info;
 
 pub async fn get_tx_data(
     bundlers: Data<Vec<String>>,
     client: Data<awc::Client>,
-    path: Path<(String, String,)>
+    path: Path<(String, String)>,
 ) -> actix_web::Result<HttpResponse> {
     let (tx_id, field) = path.into_inner();
     for bundler in bundlers.iter() {
         let url = format!("{}/tx/{}/{}", bundler, tx_id, field);
         // Create request builder, configure request and send
-        let request = client
-            .head(&url)
-            .send()
-            .await;
+        let request = client.head(&url).send().await;
 
         match request {
             Ok(req) => {
@@ -32,37 +32,49 @@ pub async fn get_tx_data(
                             .insert_header(("Cache-Control", "max-age=86400"))
                             .finish());
                     }
+                }
+                if req.status().is_redirection() {
+                    info!("Found {} at {} - redirecting", tx_id, bundler);
+                    let fallback_redir = format!("http://arweave.net/{}", tx_id);
+                    return Ok(HttpResponse::PermanentRedirect()
+                        .insert_header((
+                            "Location",
+                            match req.headers().get("Location") {
+                                Some(v) => v.to_str().unwrap(),
+                                None => fallback_redir.as_str(),
+                            },
+                        ))
+                        .finish());
                 } else {
                     info!("Not found {} at {}", tx_id, bundler);
                     continue;
                 }
-            },
+            }
             Err(e) => {
-                info!("Error occurred while getting {} from {} - {}", tx_id, bundler, e);
+                info!(
+                    "Error occurred while getting {} from {} - {}",
+                    tx_id, bundler, e
+                );
                 continue;
             }
         }
     }
-    
 
     Ok(HttpResponse::NotFound()
-    .insert_header(("Cache-Control", "max-age=0"))
-    .finish())
+        .insert_header(("Cache-Control", "max-age=0"))
+        .finish())
 }
 
 pub async fn get_tx_meta(
     bundlers: Data<Vec<String>>,
     client: Data<awc::Client>,
-    path: Path<(String,)>
+    path: Path<(String,)>,
 ) -> actix_web::Result<HttpResponse> {
     let (tx_id,) = path.into_inner();
     for bundler in bundlers.iter() {
         let url = format!("{}/tx/{}", bundler, tx_id);
         // Create request builder, configure request and send
-        let request = client
-            .head(&url)
-            .send()
-            .await;
+        let request = client.head(&url).send().await;
 
         match request {
             Ok(req) => {
@@ -85,16 +97,18 @@ pub async fn get_tx_meta(
                     info!("Not found {} at {}", tx_id, bundler);
                     continue;
                 }
-            },
+            }
             Err(e) => {
-                info!("Error occurred while getting {} from {} - {}", tx_id, bundler, e);
+                info!(
+                    "Error occurred while getting {} from {} - {}",
+                    tx_id, bundler, e
+                );
                 continue;
             }
         }
     }
-    
 
     Ok(HttpResponse::NotFound()
-    .insert_header(("Cache-Control", "max-age=0"))
-    .finish())
+        .insert_header(("Cache-Control", "max-age=0"))
+        .finish())
 }
