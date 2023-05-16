@@ -35,7 +35,7 @@ pub async fn get_tx_data(
                 }
                 if req.status().is_redirection() {
                     info!("Found {} at {} - redirecting", tx_id, bundler);
-                    let fallback_redir = format!("http://arweave.net/{}", tx_id);
+                    let fallback_redir = format!("https://arweave.net/{}", tx_id);
                     return Ok(HttpResponse::PermanentRedirect()
                         .insert_header((
                             "Location",
