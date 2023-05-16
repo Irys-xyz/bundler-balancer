@@ -1,20 +1,17 @@
 use std::cmp::Ordering;
 
-use actix_web::{HttpResponse, web::{Data}};
+use actix_web::{web::Data, HttpResponse};
 use log::{info, trace};
 
 pub async fn post_tx(
     bundlers: Data<Vec<String>>,
-    client: Data<awc::Client>
+    client: Data<awc::Client>,
 ) -> actix_web::Result<HttpResponse> {
     let mut balances = Vec::with_capacity(bundlers.len());
     for bundler in bundlers.iter() {
         let url = format!("{}/tx", bundler);
         // Get balance
-        let request = client
-            .head(&url)
-            .send()
-            .await;
+        let request = client.head(&url).send().await;
 
         trace!("Client has {} balance with {}", 1, bundler);
         balances.push(1);
@@ -36,5 +33,5 @@ pub async fn post_tx(
 
     Ok(HttpResponse::Found()
         .insert_header(("Location", max_bundler.as_str()))
-        .finish())           
+        .finish())
 }
