@@ -3,13 +3,17 @@ use actix_web::{
     HttpMessage, HttpResponse,
 };
 use log::info;
+use actix_web::Either;
 
 pub async fn get_tx_data(
     bundlers: Data<Vec<String>>,
     client: Data<awc::Client>,
-    path: Path<(String, String)>,
+    path: Either<Path<(String, String)>, Path<(String)>>,
 ) -> actix_web::Result<HttpResponse> {
-    let (tx_id, field) = path.into_inner();
+    let (tx_id, field) = match path {
+        Either::Left(s) => s.into_inner(),
+        Either::Right(s) => (s.into_inner(), "data".to_string())
+    };
     for bundler in bundlers.iter() {
         let url = format!("{}/tx/{}/{}", bundler, tx_id, field);
         // Create request builder, configure request and send
