@@ -37,6 +37,7 @@ async fn main() -> std::io::Result<()> {
         .level(log::LevelFilter::Debug)
         // - and per-module overrides
         .level_for("hyper", log::LevelFilter::Info)
+        .level_for("h2", log::LevelFilter::Info)
         // Output to stdout, files, and other Dispatch configurations
         .chain(std::io::stdout())
         // .chain(fern::log_file("output.log")?)
