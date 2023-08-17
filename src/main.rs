@@ -34,7 +34,7 @@ async fn main() -> std::io::Result<()> {
             ))
         })
         // Add blanket level filter -
-        .level(log::LevelFilter::Debug)
+        .level(log::LevelFilter::Info)
         // - and per-module overrides
         .level_for("hyper", log::LevelFilter::Info)
         .level_for("h2", log::LevelFilter::Info)
