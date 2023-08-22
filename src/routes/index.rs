@@ -8,7 +8,7 @@ pub struct IndexResponse {
 
 pub async fn index() -> actix_web::Result<HttpResponse> {
     let res = IndexResponse {
-        uptime: psutil::host::uptime().unwrap().as_secs_f32(),
+        uptime: 100.0,
     };
     Ok(HttpResponse::Ok().json(res))
 }
