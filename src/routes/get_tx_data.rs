@@ -72,12 +72,17 @@ pub async fn get_tx_data(
 pub async fn get_tx_data_manifest(
     bundlers: Data<Vec<String>>,
     client: Data<awc::Client>,
-    path: Path<(String, String)>,
+    path: Either<Path<(String, String)>, Path<(String)>>,
 ) -> actix_web::Result<HttpResponse> {
-    let (tx_id, pathh) = path.into_inner();
-
+    let (tx_id, pathh) = match path {
+        Either::Left(s) => {
+            let i = s.into_inner();
+            (i.0, "/".to_owned() + &i.1)
+        },
+        Either::Right(s) => (s.into_inner(), "".to_owned())
+    };
     for bundler in bundlers.iter() {
-        let url = format!("{}/{}/{}", bundler, tx_id, pathh);
+        let url = format!("{}/{}{}", bundler, tx_id, pathh);
         // Create request builder, configure request and send
         let request = client.head(&url).send().await;
 
@@ -99,7 +104,7 @@ pub async fn get_tx_data_manifest(
                             .finish());
                     }
                 }
-                info!("Not found {}/{} at {}", tx_id, pathh, bundler);
+                info!("Not found {} at {} {}", tx_id, pathh, bundler);
                 continue;
             }
             Err(e) => {

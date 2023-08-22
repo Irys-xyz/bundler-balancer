@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/tx/{tx_id}/{field}", web::head().to(get_tx_data))
                     .route("/tx/{tx_id}", web::get().to(get_tx_meta))
                     .route("/tx", web::post().to(post_tx))
-                    .route("/{tx_id:[a-zA-Z0-9_-]{43}}", web::get().to(get_tx_data))
+                    .route("/{tx_id:[a-zA-Z0-9_-]{43}}", web::get().to(get_tx_data_manifest))
                     .route("/{tx_id:[a-zA-Z0-9_-]{43}}/{path:.*}", web::get().to(get_tx_data_manifest)),
             )
     })
