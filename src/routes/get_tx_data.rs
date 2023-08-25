@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use actix_web::{
     web::{Data, Path},
     HttpMessage, HttpResponse,
@@ -17,7 +19,7 @@ pub async fn get_tx_data(
     for bundler in bundlers.iter() {
         let url = format!("{}/tx/{}/{}", bundler, tx_id, field);
         // Create request builder, configure request and send
-        let request = client.head(&url).send().await;
+        let request = client.head(&url).timeout(Duration::from_millis(30 * 1000)).send().await;
 
         match request {
             Ok(req) => {
@@ -84,7 +86,7 @@ pub async fn get_tx_data_manifest(
     for bundler in bundlers.iter() {
         let url = format!("{}/{}{}", bundler, tx_id, pathh);
         // Create request builder, configure request and send
-        let request = client.head(&url).send().await;
+        let request = client.head(&url).timeout(Duration::from_millis(30 * 1000)).send().await;
 
         match request {
             Ok(req) => {
@@ -131,7 +133,7 @@ pub async fn get_tx_meta(
     for bundler in bundlers.iter() {
         let url = format!("{}/tx/{}", bundler, tx_id);
         // Create request builder, configure request and send
-        let request = client.head(&url).send().await;
+        let request = client.head(&url).timeout(Duration::from_millis(30 * 1000)).send().await;
 
         match request {
             Ok(req) => {
