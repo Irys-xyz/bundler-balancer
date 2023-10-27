@@ -10,9 +10,12 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
+use chrono::Duration;
 use routes::index::index;
 use routes::sign_mock::sign_mock;
 // use sqlx::postgres::PgPoolOptions;
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
 
 use crate::routes::{
     get_tx_data::{get_tx_data, get_tx_meta, get_tx_data_manifest},
@@ -59,7 +62,13 @@ async fn main() -> std::io::Result<()> {
     info!("Running on port {}", port);
 
     HttpServer::new(move || {
-        let client  = reqwest::Client::new();
+        let retry_policy = ExponentialBackoff::builder()
+            .retry_bounds(std::time::Duration::from_millis(200), std::time::Duration::from_millis(400))
+            .build_with_max_retries(3);
+        let client = ClientBuilder::new(reqwest::Client::new())
+            .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+            .build();
+
 
         let cors = Cors::permissive();
 
