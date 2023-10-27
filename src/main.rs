@@ -59,7 +59,7 @@ async fn main() -> std::io::Result<()> {
     info!("Running on port {}", port);
 
     HttpServer::new(move || {
-        let client = awc::Client::builder().disable_redirects().finish();
+        let client  = reqwest::Client::new();
 
         let cors = Cors::permissive();
 

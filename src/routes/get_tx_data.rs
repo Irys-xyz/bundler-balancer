@@ -10,7 +10,7 @@ use actix_web::Either;
 
 pub async fn get_tx_data(
     bundlers: Data<Vec<String>>,
-    client: Data<awc::Client>,
+    client: Data<reqwest::Client>,
     path: Either<Path<(String, String)>, Path<(String)>>,
 ) -> actix_web::Result<HttpResponse> {
     let (tx_id, field) = match path {
@@ -79,7 +79,7 @@ pub async fn get_tx_data(
 
 pub async fn get_tx_data_manifest(
     bundlers: Data<Vec<String>>,
-    client: Data<awc::Client>,
+    client: Data<reqwest::Client>,
     path: Either<Path<(String, String)>, Path<(String)>>,
 ) -> actix_web::Result<HttpResponse> {
     let (tx_id, pathh) = match path {
@@ -152,7 +152,7 @@ pub async fn get_tx_data_manifest(
 
 pub async fn get_tx_meta(
     bundlers: Data<Vec<String>>,
-    client: Data<awc::Client>,
+    client: Data<reqwest::Client>,
     path: Path<(String,)>,
 ) -> actix_web::Result<HttpResponse> {
     let (tx_id,) = path.into_inner();
