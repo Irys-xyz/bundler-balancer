@@ -46,7 +46,7 @@ pub async fn get_tx_data(
                     }
                 }
                 Err(e) => {
-                    info!(
+                    error!(
                         "Error occurred while getting {} from {} - {}",
                         tx_id, b, e
                     );
@@ -118,7 +118,7 @@ pub async fn get_tx_data_manifest(
                     }
                 }
                 Err(e) => {
-                    info!(
+                    error!(
                         "Error occurred while getting {} from {} - {}",
                         tx_id, b, e
                     );
@@ -185,7 +185,7 @@ pub async fn get_tx_meta(
                     }
                 }
                 Err(e) => {
-                    info!(
+                    error!(
                         "Error occurred while getting {} from {} - {}",
                         tx_id, b, e
                     );
