@@ -40,7 +40,7 @@ pub async fn get_tx_data(
                     debug!("Headers {:?}", req.headers());
                         std::future::ready(false)
                     } else {
-                        debug!("Not success getting from {}", b);
+                        debug!("Not success getting from {} - {}", b, req.status());
 
                         std::future::ready(true)
                     }
@@ -112,7 +112,7 @@ pub async fn get_tx_data_manifest(
                     debug!("Headers {:?}", req.headers());
                         std::future::ready(false)
                     } else {
-                        debug!("Not success getting from {}", b);
+                        debug!("Not success getting from {} - {}", b, req.status());
 
                         std::future::ready(true)
                     }
@@ -179,7 +179,7 @@ pub async fn get_tx_meta(
                     debug!("Headers {:?}", req.headers());
                         std::future::ready(false)
                     } else {
-                        debug!("Not success getting from {}", b);
+                        debug!("Not success getting from {} - {}", b, req.status());
 
                         std::future::ready(true)
                     }
