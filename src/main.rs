@@ -18,7 +18,7 @@ use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
 
 use crate::routes::{
-    get_tx_data::{get_tx_data, get_tx_meta, get_tx_data_manifest},
+    get_tx_data::{get_tx_data, get_tx_meta, get_tx_data_manifest, get_tx_data_ipfs, get_tx_data_mutable},
     post_tx::post_tx,
 };
 
@@ -39,8 +39,8 @@ async fn main() -> std::io::Result<()> {
         // Add blanket level filter -
         .level(log::LevelFilter::Debug)
         // - and per-module overrides
-        .level_for("hyper", log::LevelFilter::Info)
-        .level_for("h2", log::LevelFilter::Info)
+        .level_for("hyper", log::LevelFilter::Debug)
+        .level_for("h2", log::LevelFilter::Debug)
         // Output to stdout, files, and other Dispatch configurations
         .chain(std::io::stdout())
         // .chain(fern::log_file("output.log")?)
@@ -86,6 +86,8 @@ async fn main() -> std::io::Result<()> {
                     .route("/tx/{tx_id}/{field}", web::head().to(get_tx_data))
                     .route("/tx/{tx_id}", web::get().to(get_tx_meta))
                     .route("/tx", web::post().to(post_tx))
+                    .route("/ipfs/{cid}", web::get().to(get_tx_data_ipfs))
+                    .route("/mutable/{tx_id}", web::get().to(get_tx_data_mutable))
                     .route("/{tx_id:[a-zA-Z0-9_-]{43}}", web::get().to(get_tx_data_manifest))
                     .route("/{tx_id:[a-zA-Z0-9_-]{43}}/{path:.*}", web::get().to(get_tx_data_manifest)),
             )
