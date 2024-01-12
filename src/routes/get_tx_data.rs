@@ -450,9 +450,7 @@ pub async fn get_tx_data_mutable(
 
     let final_tx_id = match tx_id_get_executors {
         Some((_, _, root_id)) => root_id.first().unwrap().node.id.clone(),
-        None => return Ok(HttpResponse::NotFound()
-        .insert_header(("Cache-Control", "max-age=0"))
-        .finish())
+        None => root_id,
     };
 
     dbg!(&final_tx_id);
