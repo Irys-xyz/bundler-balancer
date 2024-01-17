@@ -500,12 +500,12 @@ pub async fn get_tx_data_mutable(
                 return Ok(HttpResponse::Found()
                     .insert_header(("Content-Length", h))
                     .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
+                    .insert_header(("Cache-Control", "max-age=0"))
                     .finish());
             } else {
                 return Ok(HttpResponse::Found()
                     .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
+                    .insert_header(("Cache-Control", "max-age=0"))
                     .finish());
             }
         },
