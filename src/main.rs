@@ -93,6 +93,10 @@ async fn main() -> std::io::Result<()> {
                     .route("/ipfs/{cid}", web::get().to(get_tx_data_ipfs))
                     .route("/mutable/{tx_id}", web::get().to(get_tx_data_mutable))
                     .route(
+                        "/mutable/{tx_id}/{path:.*}",
+                        web::get().to(get_tx_data_mutable),
+                    )
+                    .route(
                         "/{tx_id:[a-zA-Z0-9_-]{43}}",
                         web::get().to(get_tx_data_manifest),
                     )
