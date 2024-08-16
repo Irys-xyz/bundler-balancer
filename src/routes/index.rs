@@ -7,8 +7,6 @@ pub struct IndexResponse {
 }
 
 pub async fn index() -> actix_web::Result<HttpResponse> {
-    let res = IndexResponse {
-        uptime: 100.0,
-    };
+    let res = IndexResponse { uptime: 100.0 };
     Ok(HttpResponse::Ok().json(res))
 }

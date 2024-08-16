@@ -15,10 +15,12 @@ use routes::index::index;
 use routes::sign_mock::sign_mock;
 // use sqlx::postgres::PgPoolOptions;
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
-use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
+use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 
 use crate::routes::{
-    get_tx_data::{get_tx_data, get_tx_meta, get_tx_data_manifest, get_tx_data_ipfs, get_tx_data_mutable},
+    get_tx_data::{
+        get_tx_data, get_tx_data_ipfs, get_tx_data_manifest, get_tx_data_mutable, get_tx_meta,
+    },
     post_tx::post_tx,
 };
 
@@ -63,12 +65,14 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         let retry_policy = ExponentialBackoff::builder()
-            .retry_bounds(std::time::Duration::from_millis(200), std::time::Duration::from_millis(400))
+            .retry_bounds(
+                std::time::Duration::from_millis(200),
+                std::time::Duration::from_millis(400),
+            )
             .build_with_max_retries(3);
         let client = ClientBuilder::new(reqwest::Client::new())
             .with(RetryTransientMiddleware::new_with_policy(retry_policy))
             .build();
-
 
         let cors = Cors::permissive();
 
@@ -88,8 +92,14 @@ async fn main() -> std::io::Result<()> {
                     .route("/tx", web::post().to(post_tx))
                     .route("/ipfs/{cid}", web::get().to(get_tx_data_ipfs))
                     .route("/mutable/{tx_id}", web::get().to(get_tx_data_mutable))
-                    .route("/{tx_id:[a-zA-Z0-9_-]{43}}", web::get().to(get_tx_data_manifest))
-                    .route("/{tx_id:[a-zA-Z0-9_-]{43}}/{path:.*}", web::get().to(get_tx_data_manifest)),
+                    .route(
+                        "/{tx_id:[a-zA-Z0-9_-]{43}}",
+                        web::get().to(get_tx_data_manifest),
+                    )
+                    .route(
+                        "/{tx_id:[a-zA-Z0-9_-]{43}}/{path:.*}",
+                        web::get().to(get_tx_data_manifest),
+                    ),
             )
     })
     .bind(format!("127.0.0.1:{}", port))?
