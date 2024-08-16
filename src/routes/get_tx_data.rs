@@ -432,11 +432,16 @@ const MUTABLE_GQL_QUERY: &'static str = "{
 pub async fn get_tx_data_mutable(
     bundlers: Data<Vec<String>>,
     client: Data<ClientWithMiddleware>,
-    path: Path<(String)>,
+    path: Either<Path<(String, String)>, Path<(String)>>,
 ) -> actix_web::Result<HttpResponse> {
-    let root_id = path.into_inner();
-
-    dbg!(&root_id);
+    let (root_id, subpath) = match path {
+        Either::Left(path) => {
+            let (root_id, path) = path.into_inner();
+            (root_id, Some(path))
+        }
+        Either::Right(root_id) => (root_id.into_inner(), None),
+    };
+    dbg!(&root_id, &subpath);
 
     let tx_id_get_futures = bundlers.iter().map(|b| {
         let root_id: String = root_id.clone();
@@ -486,7 +491,7 @@ pub async fn get_tx_data_mutable(
     let data_get_futures = bundlers.iter().map(|b| {
         let tx_id: String = final_tx_id.clone();
         let client = client.clone();
-
+        let subpath = subpath.clone();
         debug!("Checking {} for tx id {}", b, tx_id);
 
         let url = format!("{}/tx/{}/data", b, tx_id);
@@ -494,7 +499,12 @@ pub async fn get_tx_data_mutable(
         async move {
             (
                 b,
-                url.clone(),
+                match subpath {
+                    // change URL to manifest path (+subpath) if we have a subpath
+                    // as HEAD is only supported on /tx/.../data
+                    Some(subpath) => format!("{}/{}/{}", b, tx_id, subpath),
+                    None => url.clone(),
+                },
                 client
                     .head(url)
                     .timeout(Duration::from_millis(30 * 1000))
