@@ -103,6 +103,14 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/{tx_id:[a-zA-Z0-9_-]{43}}/{path:.*}",
                         web::get().to(get_tx_data_manifest),
+                    )
+                    .route(
+                        "/{tx_id:[1-9A-HJ-NP-Za-km-z]{32,44}}",
+                        web::get().to(get_tx_data_manifest),
+                    )
+                    .route(
+                        "/{tx_id:[1-9A-HJ-NP-Za-km-z]{32,44}}/{path:.*}",
+                        web::get().to(get_tx_data_manifest),
                     ),
             )
     })
