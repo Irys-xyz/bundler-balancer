@@ -7,9 +7,53 @@ use actix_web::{
 };
 use futures::{stream::FuturesOrdered, StreamExt};
 use log::info;
+use reqwest::Response;
 use reqwest_middleware::ClientWithMiddleware;
 use serde_derive::Deserialize;
 use serde_json::json;
+
+// Build a 302 to send back to the client based on the bundler's response.
+//
+// If the bundler returned a redirect (the new behavior — 307 to a CDN), forward
+// its Location and Cache-Control directly so the client makes one hop to the
+// CDN instead of bouncing through the bundler again. Otherwise (2xx), redirect
+// to the bundler URL with the route's normal cache policy.
+fn build_redirect_response(
+    bundler_url: String,
+    response: Response,
+    success_cache_control: &'static str,
+) -> HttpResponse {
+    let mut builder = HttpResponse::Found();
+
+    if response.status().is_redirection() {
+        let location = response
+            .headers()
+            .get("Location")
+            .and_then(|h| h.to_str().ok())
+            .map(|s| s.to_string())
+            .unwrap_or(bundler_url);
+        let cache_control = response
+            .headers()
+            .get("Cache-Control")
+            .and_then(|h| h.to_str().ok())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "no-store".to_string());
+        builder.insert_header(("Location", location));
+        builder.insert_header(("Cache-Control", cache_control));
+    } else {
+        builder.insert_header(("Location", bundler_url));
+        builder.insert_header(("Cache-Control", success_cache_control));
+        if let Some(h) = response
+            .headers()
+            .get("Content-Length")
+            .and_then(|h| h.to_str().ok())
+        {
+            builder.insert_header(("Content-Length", h.to_string()));
+        }
+    }
+
+    builder.finish()
+}
 
 pub async fn get_tx_data(
     bundlers: Data<Vec<String>>,
@@ -48,7 +92,7 @@ pub async fn get_tx_data(
         .buffer_unordered(2)
         .skip_while(|(b, _, r)| match r {
             Ok(req) => {
-                if req.status().is_success() {
+                if req.status().is_success() || req.status().is_redirection() {
                     info!("Found {} at {}", tx_id, b);
                     debug!("Headers {:?}", req.headers());
                     std::future::ready(false)
@@ -67,23 +111,9 @@ pub async fn get_tx_data(
         .await;
 
     match x {
-        Some((_, url, r)) => {
-            let r = r.unwrap();
-            if let Some(h) = r.headers().get("Content-Length") {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Content-Length", h))
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            } else {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            }
-        }
+        Some((_, url, r)) => Ok(build_redirect_response(url, r.unwrap(), "max-age=86400")),
         None => Ok(HttpResponse::NotFound()
-            .insert_header(("Cache-Control", "max-age=0"))
+            .insert_header(("Cache-Control", "max-age=10"))
             .finish()),
     }
 }
@@ -128,7 +158,7 @@ pub async fn get_tx_data_manifest(
         .buffer_unordered(2)
         .skip_while(|(b, _, r)| match r {
             Ok(req) => {
-                if req.status().is_success() {
+                if req.status().is_success() || req.status().is_redirection() {
                     info!("Found {} at {}", tx_id, b);
                     debug!("Headers {:?}", req.headers());
                     std::future::ready(false)
@@ -147,23 +177,9 @@ pub async fn get_tx_data_manifest(
         .await;
 
     match x {
-        Some((_, url, r)) => {
-            let r = r.unwrap();
-            if let Some(h) = r.headers().get("Content-Length") {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Content-Length", h))
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            } else {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            }
-        }
+        Some((_, url, r)) => Ok(build_redirect_response(url, r.unwrap(), "max-age=86400")),
         None => Ok(HttpResponse::NotFound()
-            .insert_header(("Cache-Control", "max-age=0"))
+            .insert_header(("Cache-Control", "max-age=10"))
             .finish()),
     }
 }
@@ -202,7 +218,7 @@ pub async fn get_tx_meta(
         .buffer_unordered(2)
         .skip_while(|(b, _, r)| match r {
             Ok(req) => {
-                if req.status().is_success() {
+                if req.status().is_success() || req.status().is_redirection() {
                     info!("Found {} at {}", tx_id, b);
                     debug!("Headers {:?}", req.headers());
                     std::future::ready(false)
@@ -221,23 +237,9 @@ pub async fn get_tx_meta(
         .await;
 
     match x {
-        Some((_, url, r)) => {
-            let r = r.unwrap();
-            if let Some(h) = r.headers().get("Content-Length") {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Content-Length", h))
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            } else {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            }
-        }
+        Some((_, url, r)) => Ok(build_redirect_response(url, r.unwrap(), "max-age=86400")),
         None => Ok(HttpResponse::NotFound()
-            .insert_header(("Cache-Control", "max-age=0"))
+            .insert_header(("Cache-Control", "max-age=10"))
             .finish()),
     }
 }
@@ -339,7 +341,7 @@ pub async fn get_tx_data_ipfs(
         Some((_, _, cid)) => cid.first().unwrap().node.id.clone(),
         None => {
             return Ok(HttpResponse::NotFound()
-                .insert_header(("Cache-Control", "max-age=0"))
+                .insert_header(("Cache-Control", "max-age=10"))
                 .finish())
         }
     };
@@ -373,7 +375,7 @@ pub async fn get_tx_data_ipfs(
         .buffer_unordered(2)
         .skip_while(|(b, _, r)| match r {
             Ok(req) => {
-                if req.status().is_success() {
+                if req.status().is_success() || req.status().is_redirection() {
                     info!("Found {} at {}", final_tx_id, b);
                     debug!("Headers {:?}", req.headers());
                     std::future::ready(false)
@@ -395,23 +397,9 @@ pub async fn get_tx_data_ipfs(
         .await;
 
     match data_get_executors {
-        Some((_, url, r)) => {
-            let r = r.unwrap();
-            if let Some(h) = r.headers().get("Content-Length") {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Content-Length", h))
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            } else {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=86400"))
-                    .finish());
-            }
-        }
+        Some((_, url, r)) => Ok(build_redirect_response(url, r.unwrap(), "max-age=86400")),
         None => Ok(HttpResponse::NotFound()
-            .insert_header(("Cache-Control", "max-age=0"))
+            .insert_header(("Cache-Control", "max-age=10"))
             .finish()),
     }
 }
@@ -520,7 +508,7 @@ pub async fn get_tx_data_mutable(
         .buffer_unordered(2)
         .skip_while(|(b, _, r)| match r {
             Ok(req) => {
-                if req.status().is_success() {
+                if req.status().is_success() || req.status().is_redirection() {
                     info!("Found {} at {}", final_tx_id, b);
                     debug!("Headers {:?}", req.headers());
                     std::future::ready(false)
@@ -542,23 +530,9 @@ pub async fn get_tx_data_mutable(
         .await;
 
     match data_get_executors {
-        Some((_, url, r)) => {
-            let r = r.unwrap();
-            if let Some(h) = r.headers().get("Content-Length") {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Content-Length", h))
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=0"))
-                    .finish());
-            } else {
-                return Ok(HttpResponse::Found()
-                    .insert_header(("Location", url))
-                    .insert_header(("Cache-Control", "max-age=0"))
-                    .finish());
-            }
-        }
+        Some((_, url, r)) => Ok(build_redirect_response(url, r.unwrap(), "max-age=10")),
         None => Ok(HttpResponse::NotFound()
-            .insert_header(("Cache-Control", "max-age=0"))
+            .insert_header(("Cache-Control", "max-age=10"))
             .finish()),
     }
 }

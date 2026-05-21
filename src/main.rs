@@ -4,13 +4,15 @@ extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 
+use std::time::Duration;
+
 use actix_cors::Cors;
 use actix_web::{
+    http::KeepAlive,
     middleware::Logger,
     web::{self, Data},
     App, HttpServer,
 };
-use chrono::Duration;
 use routes::index::index;
 use routes::sign_mock::sign_mock;
 // use sqlx::postgres::PgPoolOptions;
@@ -62,17 +64,31 @@ async fn main() -> std::io::Result<()> {
 
     let port = std::env::var("PORT").unwrap();
     info!("Running on port {}", port);
+    let retry_policy = ExponentialBackoff::builder()
+        .retry_bounds(
+            std::time::Duration::from_millis(200),
+            std::time::Duration::from_millis(400),
+        )
+        .build_with_max_retries(3);
+
+    let client = ClientBuilder::new(
+        reqwest::Client::builder() // TCP keepalive
+            .tcp_keepalive(Duration::from_secs(60))
+            // Connection pool idle timeout (how long to keep connections alive)
+            .pool_idle_timeout(Duration::from_secs(90))
+            // Maximum idle connections per host
+            .pool_max_idle_per_host(1000)
+            // Don't follow redirects: bundlers now 307 to CDN URLs, and we
+            // forward that Location to the client directly.
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .unwrap(),
+    )
+    .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+    .build();
 
     HttpServer::new(move || {
-        let retry_policy = ExponentialBackoff::builder()
-            .retry_bounds(
-                std::time::Duration::from_millis(200),
-                std::time::Duration::from_millis(400),
-            )
-            .build_with_max_retries(3);
-        let client = ClientBuilder::new(reqwest::Client::new())
-            .with(RetryTransientMiddleware::new_with_policy(retry_policy))
-            .build();
+        let client = client.clone();
 
         let cors = Cors::permissive();
 
@@ -114,6 +130,7 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
     })
+    .keep_alive(KeepAlive::Timeout(Duration::from_secs(55)))
     .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await
